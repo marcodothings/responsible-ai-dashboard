@@ -8,9 +8,8 @@ from sklearn.preprocessing import LabelEncoder
 
 st.set_page_config(page_title="Responsible AI Dashboard", layout="wide")
 
-# ---------------------
-# Part 1: Load Dataset
-# ---------------------
+# Now I Load the Dataset
+
 @st.cache_data
 def load_data():
     url = "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data"
@@ -27,9 +26,8 @@ def load_data():
     ).dropna()
     return data
 
-# ---------------------
-# Part 2: Preprocess
-# ---------------------
+# This is Data Preprocess
+
 @st.cache_data
 def prepare_data(data: pd.DataFrame):
     encoded = data.copy()
@@ -43,7 +41,8 @@ def prepare_data(data: pd.DataFrame):
     X = encoded.drop("income", axis=1)
     y = encoded["income"]
 
-    # Keep original protected attributes for readable fairness breakdowns.
+    # I keep original protected attributes for fairness breakdowns
+    
     X_raw = data.drop("income", axis=1)
 
     X_train, X_test, y_train, y_test, X_train_raw, X_test_raw = train_test_split(
@@ -55,10 +54,8 @@ def prepare_data(data: pd.DataFrame):
 
     return X_train, X_test, y_train, y_test, X_train_raw, X_test_raw, encoders
 
+# Now I train the Model
 
-# ---------------------
-# Part 4: Train Model
-# ---------------------
 @st.cache_resource
 def train_model(X_train, y_train):
     model = DecisionTreeClassifier(max_depth=5, random_state=42)
@@ -66,9 +63,8 @@ def train_model(X_train, y_train):
     return model
 
 
-# ---------------------
-# Part 6: Fairness by Group
-# ---------------------
+# Fairness by Group
+
 def group_accuracy(y_true, y_pred, groups: pd.Series):
     """Compute accuracy per group for a protected attribute."""
     results = {}
@@ -79,23 +75,21 @@ def group_accuracy(y_true, y_pred, groups: pd.Series):
 
     return results
 
-
 # Run pipeline
+
 raw_data = load_data()
 X_train, X_test, y_train, y_test, X_train_raw, X_test_raw, encoders = prepare_data(raw_data)
 model = train_model(X_train, y_train)
 y_pred = model.predict(X_test)
 
-# ---------------------
-# Part 5: Evaluate Model
-# ---------------------
+#Now I evaluate the Model
+
 accuracy = accuracy_score(y_test, y_pred)
 precision = precision_score(y_test, y_pred)
 recall = recall_score(y_test, y_pred)
 
-# ---------------------
-# Fairness selection
-# ---------------------
+# This is Fairness Selection
+
 st.title("Responsible AI Dashboard")
 st.caption("Adult Income dataset • Decision Tree Classifier • Performance + fairness overview")
 
@@ -113,9 +107,8 @@ fairness_df = pd.DataFrame(
     }
 ).sort_values("accuracy", ascending=False)
 
-# ---------------------
-# Dashboard layout
-# ---------------------
+# Here I create the Dashboard layout
+
 col1, col2, col3 = st.columns(3)
 col1.metric("Accuracy", f"{accuracy:.3f}")
 col2.metric("Precision", f"{precision:.3f}")
@@ -138,19 +131,19 @@ with st.expander("Show fairness results dictionary"):
 st.subheader("Why this matters for Responsible AI")
 st.write(
     """
-    This dashboard makes the model easier to inspect. The performance metrics show whether
-    the classifier is working reasonably well overall, while the group comparison checks
-    whether performance is consistent across protected groups such as sex or race.
-
-    This supports the **Measure** function in the NIST AI Risk Management Framework because
-    it turns abstract risk concerns into observable metrics that can be monitored and reviewed.
-    It also supports **transparency** expectations often discussed in AI governance, because
-    a stakeholder can see not only the final prediction system, but also how its behavior
-    differs across groups.
-
-    In practice, a dashboard like this does not solve fairness by itself. However, it creates
-    a repeatable habit of checking model quality, documenting disparities, and giving decision
-    makers evidence for whether a model is ready to deploy or needs improvement.
+    This dashboard is useful for inspecting how a machine learning model behaves.
+    The performance metrics show whether the classifier works well overall.
+    At the same time, the comparison between groups helps us see if the model performs
+    similarly for different groups, such as people of different sex or race.
+    This supports the Measure function of the NIST AI Risk Management Framework.
+    Instead of talking about risks in abstract terms, the dashboard shows concrete metrics
+    that can be observed, monitored, and reviewed.
+    It also supports transparency, which is an important principle in AI governance.
+    In fact, it is possible not only see the final prediction system, but also understand how
+    the model behaves for different groups.
+    In practice, a dashboard like this does not solve fairness problems. However, it encourages
+    some best practices: checking the quality of the model, identifying possible disparities between
+    groups, and giving clear evidence to determine if the model is ready to be deployed needs further improvement.
     """
 )
 
